@@ -1,11 +1,10 @@
-import { RedisConnector } from "./utils/redis-connector";
 import * as IORedis from "ioredis";
-import { AddListenerAfterStartedError, NoActionListenersError, NoListenerForChannel } from "./errors";
-import { NameResolver } from "./utils/name-resolver";
-import { TransportMessagesFactory } from "./utils";
-import {RequestTransportMessage, ResponseTransportMessage, TransportMessage, TransportMessageType} from "./types";
 import { EventEmitter } from "events";
-import {TimeoutError} from "./errors/timeout-error";
+import { NameResolver, RedisConnector } from "./utils";
+import { TransportMessagesFactory } from "./utils";
+import { RequestTransportMessage, ResponseTransportMessage, TransportMessage, TransportMessageType } from "./types";
+import {ListenerNotStarted, TimeoutError} from "./errors";
+import { AddListenerAfterStartedError, NoActionListenersError, NoListenerForChannel } from "./errors";
 
 export class RedisRpc {
     private readonly _sender: IORedis.Redis;
@@ -35,16 +34,20 @@ export class RedisRpc {
         return this._sender.publish(channelName, JSON.stringify(message));
     }
 
-    async sendAction<IData, IResponse>(destination: string, channel: string, data: IData): Promise<IResponse> {
-        return new Promise(async (resolve, reject) => {
+    async sendRequest<IData, IResponse>(destination: string, channel: string, data: IData): Promise<ResponseTransportMessage<IResponse>> {
+        if (!this._listenerStarted) {
+            throw new ListenerNotStarted(destination, channel, data);
+        }
+
+        return new Promise(async (resolve) => {
             const channelName = this._nameResolver.getChannelName(destination, channel);
             const requestMessage = this._transportMessagesFactory.createRequestMessage(data);
             const waiterJobName = this._nameResolver.getWaiterJobName(channelName, requestMessage);
 
-            this._eventsHub.once(waiterJobName, (data?: ResponseTransportMessage<any>) => {
+            this._eventsHub.once(waiterJobName, (data?: ResponseTransportMessage<IResponse>) => {
                 if (data) {
                     clearTimeout(this._responseWaiters[waiterJobName]);
-                    return resolve(data.data);
+                    return resolve(data);
                 } else {
                     throw new TimeoutError(channelName, data, this._responseTimeout);
                 }
@@ -81,6 +84,7 @@ export class RedisRpc {
         });
 
         console.log(`Subscriptions success ${listeners}`);
+        this._listenerStarted = true;
 
         return listeners;
     }

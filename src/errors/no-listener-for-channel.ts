@@ -1,4 +1,6 @@
-export class NoListenerForChannel extends Error {
+import {RpcRedisError} from "./rpc-redis-error";
+
+export class NoListenerForChannel extends RpcRedisError {
     constructor(
         private readonly _channel: string,
         private readonly _incomingMessage: string

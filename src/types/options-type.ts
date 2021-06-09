@@ -1,5 +1,5 @@
 export type OptionsType = {
-    redisUrl: string,
     localPrefix: string,
+    redisUrl?: string,
     timeout?: number
 }

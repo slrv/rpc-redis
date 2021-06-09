@@ -1,4 +1,6 @@
-export class TimeoutError extends Error {
+import {RpcRedisError} from "./rpc-redis-error";
+
+export class TimeoutError extends RpcRedisError {
     constructor(
         private readonly _channel: string,
         private readonly _data: any,
