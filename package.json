@@ -17,6 +17,10 @@
     "rpc"
   ],
   "author": "Roman Lytvynov",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slrv/rpc-redis.git"
+  },
   "license": "ISC",
   "dependencies": {
     "ioredis": "4.27.5"
