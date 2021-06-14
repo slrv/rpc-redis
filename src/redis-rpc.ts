@@ -35,11 +35,11 @@ export class RedisRpc {
     }
 
     async sendRequest<IData, IResponse>(destination: string, channel: string, data: IData): Promise<ResponseTransportMessage<IResponse>> {
-        if (!this._listenerStarted) {
-            throw new ListenerNotStarted(destination, channel, data);
-        }
-
         return new Promise(async (resolve) => {
+            if (!this._listenerStarted) {
+                throw new ListenerNotStarted(destination, channel, data);
+            }
+
             const channelName = this._nameResolver.getChannelName(destination, channel);
             const requestMessage = this._transportMessagesFactory.createRequestMessage(data);
             const waiterJobName = this._nameResolver.getWaiterJobName(channelName, requestMessage);
