@@ -35,9 +35,9 @@ export class RedisRpc {
     }
 
     async sendRequest<IData, IResponse>(destination: string, channel: string, data: IData): Promise<ResponseTransportMessage<IResponse>> {
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             if (!this._listenerStarted) {
-                throw new ListenerNotStarted(destination, channel, data);
+                return reject(new ListenerNotStarted(destination, channel, data));
             }
 
             const channelName = this._nameResolver.getChannelName(destination, channel);
@@ -49,7 +49,7 @@ export class RedisRpc {
                     clearTimeout(this._responseWaiters[waiterJobName]);
                     return resolve(data);
                 } else {
-                    throw new TimeoutError(channelName, data, this._responseTimeout);
+                    return reject(new TimeoutError(channelName, data, this._responseTimeout));
                 }
             });
 
@@ -57,7 +57,7 @@ export class RedisRpc {
 
             if (!listeners) {
                 this._eventsHub.removeAllListeners(waiterJobName);
-                throw new NoActionListenersError(channelName, data);
+                return reject(new NoActionListenersError(channelName, data));
             }
 
             this._responseWaiters[waiterJobName] = setTimeout(() => {
