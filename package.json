@@ -8,8 +8,9 @@
     "build": "tsc",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
-    "version": "git add -A src",
-    "postversion": "git push && git push --tags",
+    "preversion": "npm test",
+    "version": "npm run build && git add -A src",
+    "postversion": "git push && git push --tags && rm -rf lib",
     "test": "jest --config jestconfig.json"
   },
   "keywords": [
