@@ -7,7 +7,7 @@ export class RedisConnector {
     constructor (host?: string, options?: IORedis.RedisOptions);
     constructor (options?: IORedis.RedisOptions);
     constructor(...options: any) {
-        this._instance = new IORedis(options);
+        this._instance = new IORedis(...options);
         this._instance.on('connect', () => this.onConnected());
         this._instance.on('error', (e) => this.onError(e));
     }
